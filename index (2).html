@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Va-et-vient — simulateur interactif</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#141d32;--panel2:#192640;--line:#2b3a59;--txt:#eef4ff;--muted:#a1b0cc;--gold:#ffc857;--cyan:#55d6ff;--green:#48e0a4;--red:#ff7185}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -15%,#24345a 0,transparent 55%),var(--bg);font:16px/1.55 Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--txt)}
+header{padding:48px 18px 30px;text-align:center}
+.eyebrow{display:inline-block;color:var(--cyan);font-size:.78rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+h1{font-size:clamp(2rem,5vw,3.4rem);line-height:1.1;margin:12px 0;background:linear-gradient(100deg,#fff 25%,var(--gold));color:transparent;background-clip:text}
+header p{max-width:720px;margin:12px auto;color:var(--muted)}
+main{width:min(1150px,100% - 28px);margin:auto;padding-bottom:32px}
+.card{background:linear-gradient(145deg,rgba(25,38,64,.96),rgba(17,26,45,.96));border:1px solid var(--line);border-radius:22px;padding:clamp(16px,3vw,26px);margin:18px 0;box-shadow:0 16px 45px #0003}
+.section-head{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+.num{display:grid;place-items:center;flex:0 0 38px;height:38px;border-radius:12px;background:#ffc8571a;color:var(--gold);border:1px solid #ffc85755;font-weight:900}
+h2{font-size:1.25rem;margin:0}
+h3{margin:8px 0 12px;font-size:1rem}
+.muted{color:var(--muted)}
+.grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.subpanel{background:#0c1426a8;border:1px solid #2a3a58;border-radius:16px;padding:18px;min-width:0}
+.lamp-wrap{text-align:center;padding:4px 0 14px}
+.bulb{width:100px;height:100px;border-radius:50%;display:grid;place-items:center;margin:0 auto 12px;font-size:46px;background:#26334c;border:2px solid #566681;transition:.25s}
+.bulb.on{background:#ffe69a;border-color:var(--gold);box-shadow:0 0 25px #ffc85799,0 0 65px #ffc85755}
+.pill{display:inline-flex;padding:6px 13px;border-radius:99px;background:#27344d;color:var(--muted);font-weight:800;font-size:.85rem}
+.pill.on{background:#123e35;color:var(--green)}
+.switch-btn,.action{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 14px;border-radius:13px;border:1px solid #354866;background:#1a2740;color:var(--txt);font:inherit;font-weight:750;cursor:pointer;transition:.2s;margin:8px 0}
+.switch-btn:hover,.action:hover{border-color:var(--cyan);transform:translateY(-1px)}
+.switch-btn.active{border-color:#48e0a477;background:#12382f}
+.switch-btn small{display:block;color:var(--muted);font-weight:500;text-align:left}
+.track{width:48px;height:26px;flex-shrink:0;border-radius:20px;background:#3a4965;padding:3px;transition:.2s}
+.knob{display:block;width:20px;height:20px;background:white;border-radius:50%;transition:.2s}
+.switch-btn.active .track{background:var(--green)}
+.switch-btn.active .knob{transform:translateX(22px)}
+.action{width:auto;display:inline-flex;justify-content:center;padding:10px 14px;font-size:.9rem}
+.action.primary{background:var(--gold);border-color:var(--gold);color:#202033}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+svg{display:block;width:100%;height:auto}
+#circuit{background:#0b1426;border:1px solid #263854;border-radius:14px}
+.wire{fill:none;stroke:#53627e;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}
+.wire.active{stroke:var(--gold)}
+.contact{fill:#0b1426;stroke:#b9c8e4;stroke-width:3}
+.lever{stroke:#a0b1ce;stroke-width:7;stroke-linecap:round}
+.label{fill:#dce7fb;font-size:13px}
+.info{border-left:3px solid var(--cyan);background:#10283a;padding:12px 14px;border-radius:8px;margin-top:14px;color:#dceeff}
+.formula{font-family:ui-monospace,Consolas,monospace;color:var(--gold);font-weight:800}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:.82rem;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+#logic{background:#0b1426;border:1px solid #263854;border-radius:14px}
+.gate{fill:#17243c;stroke:#617596;stroke-width:2.5;transition:.2s}
+.gate.on{fill:#124337;stroke:var(--green)}
+.logic-wire{fill:none;stroke:#53627e;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.logic-wire.on{stroke:var(--green)}
+.logic-text{fill:#edf4ff;font-size:13px;font-weight:700;text-anchor:middle}
+.logic-small{fill:#a1b0cc;font-size:11px}
+.table-scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:360px;text-align:center}
+th,td{padding:12px;border-bottom:1px solid #2b3a59}
+th{color:var(--muted);font-size:.82rem;text-transform:uppercase;letter-spacing:.06em}
+tr.current{background:#ffc85718;outline:1px solid #ffc85777}
+.one{color:var(--green);font-weight:900}
+.zero{color:#a1b0cc}
+#timing{background:#0b1426;border:1px solid #263854;border-radius:14px}
+.time-controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px}
+.time-controls label{color:var(--muted);font-size:.9rem}
+select{background:#1a2740;color:var(--txt);border:1px solid #354866;border-radius:9px;padding:9px}
+footer{text-align:center;color:var(--muted);padding:8px 0 30px;font-size:.85rem}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <span class="eyebrow">Électricité · logique numérique</span>
+  <h1>Le va-et-vient</h1>
+  <p>Un simulateur interactif pour comprendre les deux interrupteurs, la fonction XOR et le chronogramme des signaux.</p>
+</header>
+<main>
+<section class="card">
+  <div class="section-head"><span class="num">01</span><div><h2>Simulation du circuit</h2><div class="muted">Clique sur A ou B : chaque changement inverse l’état de la lampe.</div></div></div>
+  <div class="grid">
+    <div class="subpanel">
+      <div class="lamp-wrap"><div id="bulb" class="bulb">💡</div><span id="status" class="pill">Lampe éteinte</span></div>
+      <h3>Commandes</h3>
+      <button id="btnA" class="switch-btn" aria-pressed="false"><span>Interrupteur A<small id="posA">Position 0</small></span><span class="track"><span class="knob"></span></span></button>
+      <button id="btnB" class="switch-btn" aria-pressed="false"><span>Interrupteur B<small id="posB">Position 0</small></span><span class="track"><span class="knob"></span></span></button>
+      <div class="actions"><button class="action primary" id="reset">↺ Réinitialiser</button><button class="action" id="step">Avancer d’un état →</button></div>
+      <div class="info" id="explanation" aria-live="polite"></div>
+    </div>
+    <div class="subpanel">
+      <h3>Schéma logique simplifié</h3>
+      <svg id="circuit" viewBox="0 0 600 300" role="img" aria-label="Schéma de principe du simulateur">
+        <path id="c1" class="wire" d="M35 90 H145"/><path id="c2" class="wire" d="M145 90 L235 45"/><path id="c3" class="wire" d="M145 90 L235 135"/>
+        <circle class="contact" cx="145" cy="90" r="7"/><circle class="contact" cx="235" cy="45" r="7"/><circle class="contact" cx="235" cy="135" r="7"/>
+        <line id="leverA" class="lever" x1="145" y1="90" x2="229" y2="45"/><text class="label" x="165" y="175">A</text>
+        <path id="c4" class="wire" d="M235 45 H340 L410 90"/><path id="c5" class="wire" d="M235 135 H340 L410 90"/>
+        <circle class="contact" cx="340" cy="45" r="7"/><circle class="contact" cx="340" cy="135" r="7"/><circle class="contact" cx="410" cy="90" r="7"/>
+        <line id="leverB" class="lever" x1="410" y1="90" x2="334" y2="45"/><text class="label" x="360" y="175">B</text>
+        <path id="c6" class="wire" d="M410 90 H490"/>
+        <circle id="svgBulb" cx="525" cy="90" r="22" fill="#26334c" stroke="#8192ae" stroke-width="3"/><path id="bulbCross" d="M513 78 L537 102 M537 78 L513 102" stroke="#8192ae" stroke-width="3"/>
+        <text class="label" x="525" y="130" text-anchor="middle">Lampe L</text><text id="svgState" class="label" x="28" y="240">A=0 · B=0 · L=0</text><text class="logic-small" x="28" y="263">Illustration fonctionnelle, non destinée au câblage réel.</text>
+      </svg>
+      <div class="legend"><span><i class="dot" style="background:#ffc857"></i>Signal actif</span><span><i class="dot" style="background:#53627e"></i>Signal inactif</span></div>
+    </div>
+  </div>
+</section>
+<section class="card">
+  <div class="section-head"><span class="num">02</span><div><h2>Logigramme</h2><div class="muted">La fonction XOR vaut 1 lorsque les entrées sont différentes.</div></div></div>
+  <p class="formula">L = A ⊕ B = (A · NON B) + (NON A · B)</p>
+  <svg id="logic" viewBox="0 0 800 260" role="img" aria-label="Logigramme logique XOR">
+    <text class="logic-small" x="25" y="50">A</text><text class="logic-small" x="25" y="175">B</text>
+    <path class="logic-wire" data-wire="A" d="M45 65 H190"/><path class="logic-wire" data-wire="nA" d="M45 65 H75 V167 H190"/>
+    <path class="logic-wire" data-wire="B" d="M45 190 H190"/><path class="logic-wire" data-wire="nB" d="M45 190 H95 V77 H190"/>
+    <rect x="190" y="45" width="110" height="65" rx="12" class="gate" data-gate="x1"/><text class="logic-text" x="245" y="72">ET</text><text class="logic-small" x="245" y="91" text-anchor="middle">A · NON B</text>
+    <rect x="190" y="135" width="110" height="65" rx="12" class="gate" data-gate="x2"/><text class="logic-text" x="245" y="162">ET</text><text class="logic-small" x="245" y="181" text-anchor="middle">NON A · B</text>
+    <path class="logic-wire" data-wire="x1" d="M300 77 H365 V110 H430"/><path class="logic-wire" data-wire="x2" d="M300 167 H365 V140 H430"/>
+    <path class="gate" data-gate="L" d="M430 90 Q470 125 430 160 Q485 155 515 125 Q485 95 430 90 Z"/><text class="logic-text" x="463" y="130">OU</text>
+    <path class="logic-wire" data-wire="L" d="M515 125 H630"/><text class="logic-small" x="35" y="42">Entrées A / B</text><text class="logic-small" x="655" y="120">L = A XOR B</text><text id="logicValues" class="logic-text" x="400" y="230">A=0 · B=0 · L=0</text>
+  </svg>
+</section>
+<section class="card">
+  <div class="section-head"><span class="num">03</span><div><h2>Chronogramme (diagramme temporel)</h2><div class="muted">Les signaux A et B changent au fil du temps ; L représente la sortie de la lampe.</div></div></div>
+  <div class="time-controls"><label for="pattern">Séquence :</label><select id="pattern"><option value="normal">A puis B alternent</option><option value="a">A change seul</option><option value="b">B change seul</option><option value="both">A et B changent ensemble</option></select><button class="action primary" id="play">▶ Lire l’animation</button><button class="action" id="pause">Ⅱ Pause</button></div>
+  <svg id="timing" viewBox="0 0 900 300" role="img" aria-label="Chronogramme des signaux A, B et L"></svg>
+  <div class="legend"><span><i class="dot" style="background:#55d6ff"></i>A</span><span><i class="dot" style="background:#ffc857"></i>B</span><span><i class="dot" style="background:#48e0a4"></i>Lampe L</span></div>
+  <p class="muted">Le chronogramme illustre la logique du simulateur, pas une mesure électrique réelle.</p>
+</section>
+<section class="card">
+  <div class="section-head"><span class="num">04</span><div><h2>Table de vérité</h2><div class="muted">Clique sur une ligne pour appliquer cet état à la simulation.</div></div></div>
+  <div class="table-scroll"><table><thead><tr><th>A</th><th>B</th><th>L = A XOR B</th><th>Lampe</th></tr></thead><tbody id="truth">
+    <tr data-a="0" data-b="0"><td>0</td><td>0</td><td class="zero">0</td><td>Éteinte</td></tr><tr data-a="0" data-b="1"><td>0</td><td>1</td><td class="one">1</td><td>Allumée</td></tr><tr data-a="1" data-b="0"><td>1</td><td>0</td><td class="one">1</td><td>Allumée</td></tr><tr data-a="1" data-b="1"><td>1</td><td>1</td><td class="zero">0</td><td>Éteinte</td></tr>
+  </tbody></table></div>
+</section>
+<footer>Simulateur pédagogique · Fonction logique XOR · Aucun branchement électrique réel</footer>
+</main>
+<script>
+"use strict";
+let A=0,B=0,timer=null,phase=0;
+const $=id=>document.getElementById(id);
+function xor(a,b){return a!==b?1:0;}
+function update(){
+  const L=xor(A,B);
+  $("btnA").classList.toggle("active",!!A);$("btnB").classList.toggle("active",!!B);
+  $("btnA").setAttribute("aria-pressed",String(!!A));$("btnB").setAttribute("aria-pressed",String(!!B));
+  $("posA").textContent="Position "+A;$("posB").textContent="Position "+B;
+  $("bulb").classList.toggle("on",!!L);$("status").classList.toggle("on",!!L);
+  $("status").textContent=L?"● Lampe allumée":"○ Lampe éteinte";
+  $("explanation").innerHTML=L?"<b style='color:var(--green)'>Sortie L = 1</b><br>A et B sont différents : la lampe est allumée.":"<b>Sortie L = 0</b><br>A et B sont identiques : la lampe est éteinte.";
+  ["c1","c2","c3","c4","c5","c6"].forEach((id,i)=>{$(id).classList.toggle("active",([A===0,A===0,A===1,A===0,A===1,L===1][i]));});
+  $("leverA").setAttribute("x2","229");$("leverA").setAttribute("y2",A?"135":"45");
+  $("leverB").setAttribute("x2","334");$("leverB").setAttribute("y2",B?"135":"45");
+  $("leverA").setAttribute("stroke",A?"#ffc857":"#a0b1ce");$("leverB").setAttribute("stroke",B?"#ffc857":"#a0b1ce");
+  $("svgBulb").setAttribute("fill",L?"#ffe69a":"#26334c");$("svgBulb").setAttribute("stroke",L?"#ffc857":"#8192ae");$("bulbCross").setAttribute("stroke",L?"#9a6b00":"#8192ae");
+  $("svgState").textContent=`A=${A} · B=${B} · L=${L}`;$("logicValues").textContent=`A=${A} · B=${B} · L=${L}`;
+  document.querySelectorAll("[data-gate]").forEach(g=>{g.classList.toggle("on",g.dataset.gate==="L"?!!L:g.dataset.gate==="x1"?(A===1&&B===0):(A===0&&B===1));});
+  document.querySelectorAll("[data-wire]").forEach(w=>{let n=w.dataset.wire;w.classList.toggle("on",n==="A"?!!A:n==="B"?!!B:n==="nA"?!A:n==="nB"?!B:n==="x1"?(A===1&&B===0):n==="x2"?(A===0&&B===1):!!L);});
+  document.querySelectorAll("#truth tr").forEach(r=>{r.classList.toggle("current",+r.dataset.a===A&&+r.dataset.b===B);});
+}
+$("btnA").addEventListener("click",()=>{A=1-A;update();});
+$("btnB").addEventListener("click",()=>{B=1-B;update();});
+$("reset").addEventListener("click",()=>{A=0;B=0;phase=0;update();});
+$("step").addEventListener("click",()=>{const states=[[0,0],[0,1],[1,1],[1,0]];phase=(phase+1)%states.length;[A,B]=states[phase];update();});
+document.querySelectorAll("#truth tr").forEach(r=>{r.addEventListener("click",()=>{A=+r.dataset.a;B=+r.dataset.b;update();});});
+function drawTiming(){
+  const svg=$("timing");const W=900,H=300,left=95,right=25,top=30,rowH=66;const stepW=(W-left-right)/8;const colors=["#55d6ff","#ffc857","#48e0a4"];const names=["A","B","L"];let seq;
+  switch($("pattern").value){
+    case "a":seq=[[0,0],[1,0],[0,0],[1,0],[0,0],[1,0],[0,0],[1,0]];break;
+    case "b":seq=[[0,0],[0,1],[0,0],[0,1],[0,0],[0,1],[0,0],[0,1]];break;
+    case "both":seq=[[0,0],[1,1],[0,0],[1,1],[0,0],[1,1],[0,0],[1,1]];break;
+    default:seq=[[0,0],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1]];
+  }
+  let out=`<rect width="${W}" height="${H}" rx="14" fill="#0b1426"/>`;
+  for(let i=0;i<=8;i++){let x=left+i*stepW;out+=`<line x1="${x}" y1="${top-5}" x2="${x}" y2="${H-25}" stroke="#293956" stroke-dasharray="3 5"/>`;out+=`<text x="${x}" y="${H-7}" fill="#a1b0cc" font-size="11" text-anchor="middle">${i}</text>`;}
+  names.forEach((name,r)=>{let y=top+r*rowH;out+=`<text x="25" y="${y+25}" fill="${colors[r]}" font-size="15" font-weight="700">${name}</text>`;out+=`<line x1="${left}" y1="${y+36}" x2="${W-right}" y2="${y+36}" stroke="#293956"/>`;let points="";
+    for(let i=0;i<seq.length;i++){let v=r===0?seq[i][0]:r===1?seq[i][1]:xor(seq[i][0],seq[i][1]);let yy=y+(v?8:34);let x=left+i*stepW;if(i===0){points+=`${x},${yy} `;}else{let prev=r===0?seq[i-1][0]:r===1?seq[i-1][1]:xor(seq[i-1][0],seq[i-1][1]);let py=y+(prev?8:34);points+=`${x},${py} ${x},${yy} `;}points+=`${x+stepW},${yy} `;}
+    out+=`<polyline points="${points}" fill="none" stroke="${colors[r]}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>`;});
+  svg.innerHTML=out;
+}
+$("pattern").addEventListener("change",drawTiming);
+$("play").addEventListener("click",()=>{
+  if(timer)return;
+  const states=()=>{switch($("pattern").value){case "a":return [[0,0],[1,0],[0,0],[1,0]];case "b":return [[0,0],[0,1],[0,0],[0,1]];case "both":return [[0,0],[1,1],[0,0],[1,1]];default:return [[0,0],[1,0],[1,1],[0,1]];}};
+  let s=states(),i=0;[A,B]=s[0];update();
+  timer=setInterval(()=>{i=(i+1)%s.length;[A,B]=s[i];update();},850);
+  $("play").textContent="▶ Animation en cours";
+});
+$("pause").addEventListener("click",()=>{clearInterval(timer);timer=null;$("play").textContent="▶ Lire l’animation";});
+update();drawTiming();
+</script>
+</body>
+</html>
